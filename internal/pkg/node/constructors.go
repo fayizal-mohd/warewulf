@@ -332,6 +332,11 @@ func (config *NodeYaml) ListAllProfiles() []string {
 	return ret
 }
 
+/*
+Cycle through all the nodes and return the first one which is discoverable and
+its primary network interface. If there is no priamry interface, the first one
+without hw address is returned.
+*/
 func (config *NodeYaml) FindDiscoverableNode() (NodeInfo, string, error) {
 	var ret NodeInfo
 
@@ -340,6 +345,9 @@ func (config *NodeYaml) FindDiscoverableNode() (NodeInfo, string, error) {
 	for _, node := range nodes {
 		if !node.Discoverable.GetB() {
 			continue
+		}
+		if _, ok := node.NetDevs[node.PrimaryNetDev.Get()]; ok {
+			return node, node.PrimaryNetDev.Get(), nil
 		}
 		for netdev, dev := range node.NetDevs {
 			if !dev.Hwaddr.Defined() {
